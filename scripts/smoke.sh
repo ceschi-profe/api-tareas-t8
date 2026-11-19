@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Smoke test: comprueba que una instancia en marcha de la API responde.
 # Uso: scripts/smoke.sh [URL]   (por defecto http://localhost:8000)
+# Si VERSION_ESPERADA tiene valor, exige que /version la reporte.
 set -euo pipefail
 URL="${1:-http://localhost:8000}"
 
@@ -18,6 +19,11 @@ echo "OK /health"
 
 version=$(curl -fsS "$URL/version") || falla "/version no responde"
 echo "OK /version -> $version"
+if [[ -n "${VERSION_ESPERADA:-}" ]]; then
+  echo "$version" | grep -Eq "\"version\": ?\"$VERSION_ESPERADA\"" \
+    || falla "se esperaba la version $VERSION_ESPERADA"
+  echo "OK la version desplegada es $VERSION_ESPERADA"
+fi
 
 curl -fsS -o /dev/null "$URL/tareas" || falla "/tareas no responde"
 echo "OK /tareas"
